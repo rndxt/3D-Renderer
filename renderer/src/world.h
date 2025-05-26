@@ -17,9 +17,9 @@ class World {
     void addDirectionalLight(DirectionalLight&& light);
 
     // todo: maybe better provide iterator and sentinel
-    std::span<const Object> GetObjects() const;
-    std::span<const DirectionalLight> GetDirectionalLights() const;
-    const AmbientLight& GetAmbientLight() const;
+    std::span<const Object> getObjects() const;
+    std::span<const DirectionalLight> getDirectionalLights() const;
+    const AmbientLight& getAmbientLight() const;
 
   private:
     std::vector<Object> objects_;

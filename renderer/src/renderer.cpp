@@ -273,11 +273,11 @@ Renderer::Renderer() {
 }
 
 void Renderer::setNormalMode() {
-    render_triangle_ = &Renderer::RenderTriangleFilled;
+    render_triangle_ = &Renderer::renderTriangleFilled;
 }
 
 void Renderer::setWireframeMode() {
-    render_triangle_ = &Renderer::RenderTriangleWireframe;
+    render_triangle_ = &Renderer::renderTriangleWireframe;
 }
 
 Screen Renderer::render(const World& world, const Camera& camera,
@@ -287,22 +287,21 @@ Screen Renderer::render(const World& world, const Camera& camera,
     constexpr double kInfinity
         = std::numeric_limits<double>::infinity(); // todo: set 1
     z_buffer_.setConstant(screen.getWidth(), screen.getHeight(), kInfinity);
-    for (const auto& object : world.GetObjects()) {
+    for (const auto& object : world.getObjects()) {
         for (const auto& triangle : object.getTriangles()) {
-            RenderTriangle(object, triangle, camera, world, screen);
+            renderTriangle(object, triangle, camera, world, screen);
         }
     }
     return screen;
 }
 
-void Renderer::RenderTriangle(const Object& object, const Triangle& triangle,
+void Renderer::renderTriangle(const Object& object, const Triangle& triangle,
                               const Camera& camera, const World& world,
                               Screen& screen) {
     Matrix3x3 global_coordinates = GetGlobalCoordinates(object, triangle);
     Vector3 normal = makeNormal(global_coordinates);
-
     Matrix4x3 positions;
-    positions << global_coordinates, Eigen::RowVector3d::Constant(1.0);
+    positions << global_coordinates, RowVector3::Constant(1.0);
     // todo: copy of camera matrix on each iteration
     Matrix4x3 vertexes_in_camera_space = camera.makeViewMatrix() * positions;
     std::vector clipped_triangles = ClipByViewingFrustum(
@@ -310,15 +309,15 @@ void Renderer::RenderTriangle(const Object& object, const Triangle& triangle,
         camera);
 
     for (auto& clipped : clipped_triangles) {
-        clipped.vertexes = camera.MakeProjectionMatrix() * clipped.vertexes;
+        clipped.vertexes = camera.makeProjectionMatrix() * clipped.vertexes;
         Triangle tr = {FromHClipSpaceToNormalizedDevice(clipped.vertexes),
                        clipped.normal, clipped.color};
-        render_triangle_(*this, tr, world.GetDirectionalLights(),
-                         world.GetAmbientLight(), screen);
+        render_triangle_(*this, tr, world.getDirectionalLights(),
+                         world.getAmbientLight(), screen);
     }
 }
 
-void Renderer::RenderTriangleWireframe(const Triangle& triangle,
+void Renderer::renderTriangleWireframe(const Triangle& triangle,
                                        std::span<const DirectionalLight>,
                                        const AmbientLight&, Screen& screen) {
     Matrix2x3i vertexesOnScreen = MapToPixels(triangle, screen);
@@ -330,7 +329,7 @@ void Renderer::RenderTriangleWireframe(const Triangle& triangle,
     DrawLine(c, a, triangle.color, screen);
 }
 
-void Renderer::RenderTriangleFilled(
+void Renderer::renderTriangleFilled(
     const Triangle& triangle,
     std::span<const DirectionalLight> directional_lights,
     const AmbientLight& ambient_light, Screen& screen) {
@@ -342,13 +341,13 @@ void Renderer::RenderTriangleFilled(
     auto [min_y, max_y] = std::ranges::minmax({a.y(), b.y(), c.y()});
     for (int y = min_y; y <= max_y; ++y) {
         for (int x = min_x; x <= max_x; ++x) {
-            DrawPixelIfInTriangle(x, y, vertexesOnScreen, triangle,
+            drawPixelIfInTriangle(x, y, vertexesOnScreen, triangle,
                                   directional_lights, ambient_light, screen);
         }
     }
 }
 
-void Renderer::DrawPixelIfInTriangle(
+void Renderer::drawPixelIfInTriangle(
     int x, int y, const Matrix2x3i& vertexes, const Triangle& triangle,
     std::span<const DirectionalLight> directional_lights,
     const AmbientLight& ambient_light, Screen& screen) {

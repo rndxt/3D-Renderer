@@ -9,6 +9,7 @@ namespace Rendering {
 using Index = Eigen::Index;
 using Vector2i = Eigen::Vector2i;
 using Matrix2x3i = Eigen::Matrix<int, 2, 3>;
+using RowVector3 = Eigen::RowVector3d;
 using Vector3 = Eigen::Vector3d;
 using Vector4 = Eigen::Vector4d;
 using Matrix3x3 = Eigen::Matrix3d;

@@ -8,10 +8,10 @@ namespace Rendering {
 
 Camera::Camera(double aspectRatio, Near near, Far far, FieldOfViewAngle angle)
     : aspect_ratio_(aspectRatio),
-      near_(near.Get()),
-      far_(far.Get()),
-      fov_(angle.Get()),
-      projection_matrix_(MakeProjectionMatrix()) {
+      near_(near.get()),
+      far_(far.get()),
+      fov_(angle.get()),
+      projection_matrix_(makeProjectionMatrix()) {
     assert(aspect_ratio_ > 0.0);
     assert(fov_ > 0.0 && fov_ < std::numbers::pi);
     assert(near_ > 0.0);
@@ -22,7 +22,7 @@ Matrix4x4 Camera::makeViewMatrix() const {
     return axis_transform_.matrix().inverse();
 }
 
-Matrix4x4 Camera::MakeProjectionMatrix() const {
+Matrix4x4 Camera::makeProjectionMatrix() const {
     double a = aspect_ratio_;
     double n = near_;
     double f = far_;

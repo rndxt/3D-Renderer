@@ -17,7 +17,7 @@ class Camera {
     Camera(double aspect, Near near, Far far, FieldOfViewAngle fov);
 
     Matrix4x4 makeViewMatrix() const;
-    Matrix4x4 MakeProjectionMatrix() const;
+    Matrix4x4 makeProjectionMatrix() const;
 
     FrustumPlanes makeViewingFrustumPlanes() const;
 

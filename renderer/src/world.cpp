@@ -14,15 +14,15 @@ void World::addDirectionalLight(DirectionalLight&& light) {
     directional_lights_.push_back(std::move(light));
 }
 
-std::span<const Object> World::GetObjects() const {
+std::span<const Object> World::getObjects() const {
     return objects_;
 }
 
-std::span<const DirectionalLight> World::GetDirectionalLights() const {
+std::span<const DirectionalLight> World::getDirectionalLights() const {
     return directional_lights_;
 }
 
-const AmbientLight& World::GetAmbientLight() const {
+const AmbientLight& World::getAmbientLight() const {
     return ambient_light_;
 }
 

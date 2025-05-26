@@ -28,22 +28,22 @@ class Renderer {
                                        const AmbientLight& ambient_light,
                                        Screen& screen)>;
 
-    void RenderTriangle(const Object& object, const Triangle& triangle,
+    void renderTriangle(const Object& object, const Triangle& triangle,
                         const Camera& camera, const World& world,
                         Screen& screen);
 
-    void RenderTriangleWireframe(const Triangle& triangle,
+    void renderTriangleWireframe(const Triangle& triangle,
                                  DirectionalLights directional_lights,
                                  const AmbientLight& ambient_light,
                                  Screen& screen);
 
-    void RenderTriangleFilled(const Triangle& triangle_pr,
+    void renderTriangleFilled(const Triangle& triangle_pr,
                               DirectionalLights directional_lights,
                               const AmbientLight& ambient_light,
                               Screen& screen);
 
     void
-    DrawPixelIfInTriangle(int x, int y, const Matrix2x3i& vertexes,
+    drawPixelIfInTriangle(int x, int y, const Matrix2x3i& vertexes,
                           const Triangle& triangle,
                           DirectionalLights directional_lights,
                           const AmbientLight& ambient_light, Screen& screen);
