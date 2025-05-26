@@ -42,11 +42,11 @@ class Renderer {
                               const AmbientLight& ambient_light,
                               Screen& screen);
 
-    void
-    drawPixelIfInTriangle(int x, int y, const Matrix2x3i& vertexes,
-                          const Triangle& triangle,
-                          DirectionalLights directional_lights,
-                          const AmbientLight& ambient_light, Screen& screen);
+    void drawPixelIfInTriangle(int x, int y, const Matrix2x3i& vertexes,
+                               const Triangle& triangle,
+                               DirectionalLights directional_lights,
+                               const AmbientLight& ambient_light,
+                               Screen& screen);
 
     RenderF render_triangle_;
     Array2 z_buffer_;
