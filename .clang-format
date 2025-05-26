@@ -1,0 +1,16 @@
+Language: Cpp
+BasedOnStyle: LLVM
+IndentWidth: 4
+PackConstructorInitializers: CurrentLine
+BraceWrapping:
+  SplitEmptyFunction: true
+AllowShortFunctionsOnASingleLine : None
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBinaryOperators: All
+PointerAlignment: Left
+SpaceAfterTemplateKeyword: true
+SpacesInContainerLiterals: false
+IncludeBlocks: Regroup
+FixNamespaceComments: true
+InsertNewlineAtEOF: true
+LineEnding: LF

@@ -1,0 +1,2 @@
+add_library(Observer3 INTERFACE)
+target_include_directories(Observer3 INTERFACE Library/Observer3)
