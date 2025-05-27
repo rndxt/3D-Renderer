@@ -25,7 +25,9 @@ int Screen::getPixelsCount() const {
 }
 
 double Screen::getAspect() const {
-    return static_cast<double>(getHeight()) / getWidth();
+    double h = getHeight();
+    double w = getWidth();
+    return h / w;
 }
 
 std::span<const std::uint8_t> Screen::getPixels() const {

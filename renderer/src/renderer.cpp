@@ -272,14 +272,6 @@ Renderer::Renderer() {
     setWireframeMode();
 }
 
-void Renderer::setNormalMode() {
-    render_triangle_ = &Renderer::renderTriangleFilled;
-}
-
-void Renderer::setWireframeMode() {
-    render_triangle_ = &Renderer::renderTriangleWireframe;
-}
-
 Screen Renderer::render(const World& world, const Camera& camera,
                         Screen&& screen) {
     Color background = Color::Black();
@@ -293,6 +285,14 @@ Screen Renderer::render(const World& world, const Camera& camera,
         }
     }
     return screen;
+}
+
+void Renderer::setNormalMode() {
+    render_triangle_ = &Renderer::renderTriangleFilled;
+}
+
+void Renderer::setWireframeMode() {
+    render_triangle_ = &Renderer::renderTriangleWireframe;
 }
 
 void Renderer::renderTriangle(const Object& object, const Triangle& triangle,
@@ -358,7 +358,7 @@ void Renderer::drawPixelIfInTriangle(
     double w0 = GetSignedArea(b.x(), b.y(), c.x(), c.y(), x, y);
     double w1 = GetSignedArea(c.x(), c.y(), a.x(), a.y(), x, y);
     double w2 = GetSignedArea(a.x(), a.y(), b.x(), b.y(), x, y);
-    if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
+    if ((w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0)) {
         double z = GetZCoordByArea(triangle.vertexes.row(2), w0, w1, w2, area);
         if (x < 0 || x >= screen.getWidth()) {
             return;
