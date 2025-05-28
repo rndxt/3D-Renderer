@@ -15,6 +15,11 @@ using Rendering::Width;
 
 namespace {
 
+std::string GetDefaultTitle() {
+    // SFML take only raw ptr or std::string
+    return "3D Renderer";
+}
+
 void InitializeDefaultLights(SceneModel& model) {
     constexpr Color kDefaultAmbientLightColor = 0x1a1a1a;
     constexpr Color kDefaultDirectionalLightColor = 0xffe6b2;
@@ -30,7 +35,7 @@ void InitializeDefaultLights(SceneModel& model) {
 namespace App {
 
 Application::Application(int argc, char* argv[])
-    : Application(kWindowSize, kDefaultTitle) {
+    : Application(kWindowSize, GetDefaultTitle()) {
     std::optional options = Cl::ParseCommandLineOptions(argc, argv);
     // todo:
     // I don't know how handle parsing errors in this scope.

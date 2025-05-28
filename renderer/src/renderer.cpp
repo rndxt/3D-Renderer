@@ -167,13 +167,14 @@ std::vector<TriangleProjected>
 ClipByViewingFrustum(const TriangleProjected& triangle, const Camera& camera) {
     std::array planes = camera.makeViewingFrustumPlanes();
     std::vector result = {triangle};
+    std::vector<TriangleProjected> clipped;
     for (const auto& plane : planes) {
-        std::vector<TriangleProjected> clipped;
-        for (const auto& triangle : result) {
-            std::vector tr = ClipByPlane(triangle, plane);
-            clipped.insert(clipped.end(), tr.begin(), tr.end());
+        for (const auto& triangle_for_clip : result) {
+            std::vector triangles = ClipByPlane(triangle_for_clip, plane);
+            clipped.insert(clipped.end(), triangles.begin(), triangles.end());
         }
-        result = std::move(clipped);
+        std::swap(result, clipped);
+        clipped.clear();
     }
     return result;
 }
@@ -310,9 +311,9 @@ void Renderer::renderTriangle(const Object& object, const Triangle& triangle,
 
     for (auto& clipped : clipped_triangles) {
         clipped.vertexes = camera.makeProjectionMatrix() * clipped.vertexes;
-        Triangle tr = {FromHClipSpaceToNormalizedDevice(clipped.vertexes),
+        Triangle triangle_in_ndc = {FromHClipSpaceToNormalizedDevice(clipped.vertexes),
                        clipped.normal, clipped.color};
-        render_triangle_(*this, tr, world.getDirectionalLights(),
+        render_triangle_(*this, triangle_in_ndc, world.getDirectionalLights(),
                          world.getAmbientLight(), screen);
     }
 }
@@ -354,7 +355,7 @@ void Renderer::drawPixelIfInTriangle(
     const auto& a = vertexes.col(0);
     const auto& b = vertexes.col(1);
     const auto& c = vertexes.col(2);
-    const double area = GetSignedArea(a.x(), a.y(), b.x(), b.y(), c.x(), c.y());
+    double area = GetSignedArea(a.x(), a.y(), b.x(), b.y(), c.x(), c.y());
     double w0 = GetSignedArea(b.x(), b.y(), c.x(), c.y(), x, y);
     double w1 = GetSignedArea(c.x(), c.y(), a.x(), a.y(), x, y);
     double w2 = GetSignedArea(a.x(), a.y(), b.x(), b.y(), x, y);

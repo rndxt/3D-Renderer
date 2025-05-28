@@ -19,9 +19,6 @@ class Application {
 
   private:
     using WindowSize = sf::Vector2u;
-
-    // SFML take only raw ptr or std::string
-    const std::string kDefaultTitle = "3D Renderer";
     static constexpr WindowSize kWindowSize{1280, 720};
 
     Application(WindowSize size, const std::string& title);
