@@ -107,10 +107,9 @@ void DrawLine(Vector2i p1, Vector2i p2, const Color& color, Screen& screen) {
     DrawNonverticalLine(p1, p2, color, screen);
 }
 
-std::vector<TriangleProjected> ClipByPlane(const TriangleProjected& triangle_pr,
-                                           const Vector4& planeVector) {
+std::vector<Matrix4x3> ClipByPlane(const Matrix4x3& vertexes,
+                                   const Vector4& planeVector) {
     constexpr size_t CountVertexes = 3;
-    const auto& [vertexes, normal, color] = triangle_pr;
     size_t countVisible = 0;
     size_t countInvisible = 0;
     std::array<Index, CountVertexes> visible;
@@ -124,11 +123,11 @@ std::vector<TriangleProjected> ClipByPlane(const TriangleProjected& triangle_pr,
     }
 
     if (countVisible == 3) {
-        return {TriangleProjected{vertexes, normal, color}};
+        return {vertexes};
     }
 
     if (countVisible == 2) {
-        std::vector clipped(2, TriangleProjected{vertexes, normal, color});
+        std::vector<Matrix4x3> clipped(2);
         Index A = invisible[0];
         Index B = visible[0];
         Index C = visible[1];
@@ -136,17 +135,17 @@ std::vector<TriangleProjected> ClipByPlane(const TriangleProjected& triangle_pr,
             vertexes.col(B), vertexes.col(A) - vertexes.col(B), planeVector);
         Vector4 AC = intersectLineAndPlane(
             vertexes.col(C), vertexes.col(A) - vertexes.col(C), planeVector);
-        clipped[0].vertexes.col(0) = vertexes.col(B);
-        clipped[0].vertexes.col(1) = AB;
-        clipped[0].vertexes.col(2) = AC;
-        clipped[1].vertexes.col(0) = vertexes.col(C);
-        clipped[1].vertexes.col(1) = vertexes.col(B);
-        clipped[1].vertexes.col(2) = AC;
+        clipped[0].col(0) = vertexes.col(B);
+        clipped[0].col(1) = AB;
+        clipped[0].col(2) = AC;
+        clipped[1].col(0) = vertexes.col(C);
+        clipped[1].col(1) = vertexes.col(B);
+        clipped[1].col(2) = AC;
         return clipped;
     }
 
     if (countVisible == 1) {
-        std::vector clipped(1, TriangleProjected{vertexes, normal, color});
+        std::vector<Matrix4x3> clipped(1);
         Index C = visible[0];
         Index A = invisible[0];
         Index B = invisible[1];
@@ -154,20 +153,20 @@ std::vector<TriangleProjected> ClipByPlane(const TriangleProjected& triangle_pr,
             vertexes.col(C), vertexes.col(A) - vertexes.col(C), planeVector);
         Vector4 BC = intersectLineAndPlane(
             vertexes.col(C), vertexes.col(B) - vertexes.col(C), planeVector);
-        clipped[0].vertexes.col(0) = vertexes.col(C);
-        clipped[0].vertexes.col(1) = BC;
-        clipped[0].vertexes.col(2) = AC;
+        clipped[0].col(0) = vertexes.col(C);
+        clipped[0].col(1) = BC;
+        clipped[0].col(2) = AC;
         return clipped;
     }
 
     return {};
 }
 
-std::vector<TriangleProjected>
-ClipByViewingFrustum(const TriangleProjected& triangle, const Camera& camera) {
+std::vector<Matrix4x3> ClipByViewingFrustum(const Matrix4x3& vertexes,
+                                            const Camera& camera) {
     std::array planes = camera.makeViewingFrustumPlanes();
-    std::vector result = {triangle};
-    std::vector<TriangleProjected> clipped;
+    std::vector result = {vertexes};
+    std::vector<Matrix4x3> clipped;
     for (const auto& plane : planes) {
         for (const auto& triangle_for_clip : result) {
             std::vector triangles = ClipByPlane(triangle_for_clip, plane);
@@ -251,10 +250,13 @@ double GetZCoordByArea(const Vector3 z, double w0, double w1, double w2,
     return v.dot(z);
 }
 
-Matrix3x3 GetGlobalCoordinates(const Object& object, const Triangle& triangle) {
-    Matrix3x3 coordinates = object.getRotation() * triangle.vertexes;
-    coordinates.colwise() += object.getTranslation();
-    return coordinates;
+Triangle TransformToGlobalCoordinates(const Object& object,
+                                      const Triangle& triangle) {
+    auto [vertexes, normal, color] = triangle;
+    vertexes = object.getRotation() * vertexes;
+    vertexes.colwise() += object.getTranslation();
+    normal = object.getRotation() * normal + object.getTranslation();
+    return {vertexes, normal, color};
 }
 
 double GetSignedArea(double x0, double y0, double x1, double y1, double x,
@@ -279,7 +281,9 @@ Screen Renderer::render(const World& world, const Camera& camera,
     z_buffer_.setConstant(screen.getWidth(), screen.getHeight(), kInfinity);
     for (const auto& object : world.getObjects()) {
         for (const auto& triangle : object.getTriangles()) {
-            renderTriangle(object, triangle, camera, world, screen);
+            Triangle in_global_space
+                = TransformToGlobalCoordinates(object, triangle);
+            renderTriangle(object, in_global_space, camera, world, screen);
         }
     }
     return screen;
@@ -296,20 +300,17 @@ void Renderer::setWireframeMode() {
 void Renderer::renderTriangle(const Object& object, const Triangle& triangle,
                               const Camera& camera, const World& world,
                               Screen& screen) {
-    Matrix3x3 global_coordinates = GetGlobalCoordinates(object, triangle);
-    Vector3 normal = makeNormal(global_coordinates);
-    Matrix4x3 positions;
-    positions << global_coordinates, RowVector3::Constant(1.0);
+    Matrix4x3 homogeneous_coordinates;
+    homogeneous_coordinates << triangle.vertexes, RowVector3::Constant(1.0);
     // todo: copy of camera matrix on each iteration
-    Matrix4x3 vertexes_in_camera_space = camera.makeViewMatrix() * positions;
-    std::vector clipped_triangles = ClipByViewingFrustum(
-        TriangleProjected{vertexes_in_camera_space, normal, triangle.color},
-        camera);
-
-    for (auto& clipped : clipped_triangles) {
-        clipped.vertexes = camera.makeProjectionMatrix() * clipped.vertexes;
-        Triangle triangle_in_ndc = {FromHClipSpaceToNormalizedDevice(clipped.vertexes),
-                       clipped.normal, clipped.color};
+    Matrix4x3 vertexes_in_camera_space
+        = camera.makeViewMatrix() * homogeneous_coordinates;
+    std::vector clipped_triangles
+        = ClipByViewingFrustum(vertexes_in_camera_space, camera);
+    for (Matrix4x3& clipped : clipped_triangles) {
+        clipped = camera.makeProjectionMatrix() * clipped;
+        Triangle triangle_in_ndc = {FromHClipSpaceToNormalizedDevice(clipped),
+                                    triangle.normal, triangle.color};
         render_triangle_(*this, triangle_in_ndc, world.getDirectionalLights(),
                          world.getAmbientLight(), screen);
     }
