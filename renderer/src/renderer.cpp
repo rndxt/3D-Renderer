@@ -252,12 +252,9 @@ double GetZCoordByArea(const Vector3 z, double w0, double w1, double w2,
 }
 
 Matrix3x3 GetGlobalCoordinates(const Object& object, const Triangle& triangle) {
-    auto m = object.getRotation() * triangle.vertexes;
-    Matrix3x3 r;
-    for (int i = 0; i < 3; ++i) {
-        r.col(i) = m.col(i) + object.getTranslation();
-    }
-    return m;
+    Matrix3x3 coordinates = object.getRotation() * triangle.vertexes;
+    coordinates.colwise() += object.getTranslation();
+    return coordinates;
 }
 
 double GetSignedArea(double x0, double y0, double x1, double y1, double x,
