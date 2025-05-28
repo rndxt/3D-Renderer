@@ -1,0 +1,62 @@
+@startuml Class diagram
+
+namespace Rendering {
+    struct Triangle {
+    }
+
+    class Object {
+    }
+
+    class World {
+    }
+
+    class Camera {
+    }
+
+    class Screen {
+    }
+
+    class Renderer {
+    }
+
+    struct AmbientLight {
+    }
+
+    struct DirectionalLight {
+    }
+
+
+    Object *-- Triangle
+
+    World *-- Object
+    World *-- AmbientLight
+    World *-- DirectionalLight
+
+    Renderer --> Screen
+    Renderer --> World
+    Renderer --> Camera
+}
+
+namespace App {
+    class Application {
+    }
+
+    class SceneModel {
+    }
+
+    class EventManager {
+    }
+
+    class WindowView {
+    }
+
+    class KeyboardController {
+    }
+
+    Application o-- SceneModel
+    Application o-- EventManager
+    Application o-- WindowView
+    Application o-- KeyboardController
+}
+
+@enduml
